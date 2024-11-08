@@ -1,6 +1,9 @@
 ﻿#SingleInstance force
 #Requires AutoHotkey v2.0
 
+; Modified by ThioJoe
+; https://github.com/ThioJoe/AHK-RemoteTreeView-V2
+
 class RemoteTreeView
 {
     ; Authors:
