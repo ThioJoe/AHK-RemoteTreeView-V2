@@ -1,8 +1,5 @@
-﻿
-; AHK version:      v2.0-a
-
-#SingleInstance force
-#Requires AutoHotkey v2.0-a
+﻿#SingleInstance force
+#Requires AutoHotkey v2.0
 
 class RemoteTreeView
 {
@@ -672,7 +669,7 @@ class RemoteTreeView
 		SavedDelay := A_KeyDelay
 		SetKeyDelay(30)
 		
-		this.SetSelection(pItem)
+		this.SetSelection(pItem, false) ; Set defaultAction to false to prevent sending Enter
 		ErrorLevel := SendMessage(this.TVM_GETITEMSTATE, pItem, 0, , "ahk_id " this.TVHwnd)
 		State := ((ErrorLevel & this.TVIS_STATEIMAGEMASK) >> 12) - 1
 		
@@ -742,7 +739,7 @@ class RemoteTreeView
     ; Returns:
     ;         A text representation of the control content
     
-    GetControlContent(Level:=0, pItem:=0){
+    GetControlContent(Level:=0, pItem:=0, includeCheckboxes:=false){
         passed := false
         ControlText := ""
         
@@ -753,11 +750,29 @@ class RemoteTreeView
                 loop Level {
                     ControlText .= "`t"
                 }
-                ControlText .= this.GetText(pItem) "`n"
-                ; ControlText .= RegexReplace(this.GetText(pItem),"^[-\.]","`t", &donechanges,1) . "`n"
+                
+                ; If includeCheckboxes is true, get and include the checked status
+                if (includeCheckboxes) {
+                    ; Get the checked status of the item
+                    Checked := this.IsChecked(pItem, false)
+                    if (Checked = 1)
+                        statusText := "[X] "
+                    else if (Checked = 0)
+                        statusText := "[ ] "
+                    else
+                        ; Seems that checkboxes are marked with dashes for cases where it can't get status - Meaning partial group checked
+                        statusText := "[-] "
+                } else {
+                    statusText := ""  ; Do not include status
+                }
+                
+                ; Include the status (if any) in the output
+                ControlText .= statusText this.GetText(pItem) "`n"
+                
                 NextLevel := Level+1
-
-                ControlText .= this.GetControlContent(NextLevel,pItem)
+                
+                ; Pass includeCheckboxes parameter in the recursive call
+                ControlText .= this.GetControlContent(NextLevel, pItem, includeCheckboxes)
                 passed := true
             } else {
                 break
@@ -1010,5 +1025,3 @@ class RemoteTreeView
                         , "Int")
     }
 }
-
-;
